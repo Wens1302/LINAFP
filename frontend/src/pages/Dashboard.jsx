@@ -102,9 +102,9 @@ export default function Dashboard() {
   }
 
   // Chart 2 – W/D/L distribution across all teams
-  const totalWins   = standings.reduce((acc, s) => acc + (s.wins ?? s.v ?? 0), 0)
-  const totalDraws  = standings.reduce((acc, s) => acc + (s.draws ?? s.n ?? 0), 0)
-  const totalLosses = standings.reduce((acc, s) => acc + (s.losses ?? s.d ?? 0), 0)
+  const totalWins   = standings.reduce((acc, s) => acc + (s.won ?? s.wins ?? s.v ?? 0), 0)
+  const totalDraws  = standings.reduce((acc, s) => acc + (s.drawn ?? s.draws ?? s.n ?? 0), 0)
+  const totalLosses = standings.reduce((acc, s) => acc + (s.lost ?? s.losses ?? s.d ?? 0), 0)
 
   const wdlData = {
     labels: ['Victoires', 'Nuls', 'Défaites'],

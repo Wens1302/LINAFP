@@ -83,9 +83,9 @@ export default function Standings() {
               {standings.map((s, idx) => {
                 const medal = ROW_COLORS[idx]
                 const pj   = val(s, 'played', 'pj', 'games_played')
-                const wins  = val(s, 'wins', 'v', 'victories')
-                const draws = val(s, 'draws', 'n', 'nuls')
-                const loss  = val(s, 'losses', 'd', 'defaites')
+                const wins  = val(s, 'won', 'wins', 'v', 'victories')
+                const draws = val(s, 'drawn', 'draws', 'n', 'nuls')
+                const loss  = val(s, 'lost', 'losses', 'd', 'defaites')
                 const bp    = val(s, 'goals_for', 'bp', 'buts_pour')
                 const bc    = val(s, 'goals_against', 'bc', 'buts_contre')
                 const diff  = bp - bc
