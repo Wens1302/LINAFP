@@ -88,7 +88,7 @@ export default function Matches() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.home_team_id) { setFormError('Sélectionnez l\'équipe domicile.'); return }
-    if (!formData.away_team_id) { setFormError('Sélectionnez l\'équipe extérieur.'); return }
+    if (!formData.away_team_id) { setFormError('Sélectionnez l\'équipe extérieure.'); return }
     if (formData.home_team_id === formData.away_team_id) {
       setFormError('Les deux équipes doivent être différentes.')
       return
@@ -211,7 +211,7 @@ export default function Matches() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="m-away">Équipe extérieur <span style={{ color: '#dc2626' }}>*</span></label>
+                  <label htmlFor="m-away">Équipe extérieure <span style={{ color: '#dc2626' }}>*</span></label>
                   <select id="m-away" name="away_team_id" value={formData.away_team_id} onChange={handleChange} required>
                     <option value="">– Sélectionner –</option>
                     {teams.map((t) => <option key={t.id} value={t.id}>{t.nom}</option>)}
