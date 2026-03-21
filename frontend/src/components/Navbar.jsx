@@ -2,6 +2,15 @@ import React, { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
+const PUBLIC_NAV = [
+  { to: '/',              label: 'Accueil',       end: true },
+  { to: '/clubs',         label: 'Clubs' },
+  { to: '/joueurs',       label: 'Joueurs' },
+  { to: '/resultats',     label: 'Résultats' },
+  { to: '/classement',    label: 'Classement' },
+  { to: '/statistiques',  label: 'Statistiques' },
+]
+
 const ADMIN_LINKS = [
   { to: '/admin/dashboard',  label: 'Dashboard',   icon: '📊' },
   { to: '/admin/teams',      label: 'Équipes',      icon: '🛡️' },
@@ -12,7 +21,6 @@ const ADMIN_LINKS = [
   { to: '/admin/articles',   label: 'Articles',     icon: '📰' },
 ]
 
-/* ── shared styles ───────────────────────────────────────────────────────── */
 const navBase = {
   boxShadow: '0 2px 0 var(--f1-red)',
   position: 'sticky',
@@ -33,7 +41,6 @@ const innerStyle = {
 function LogoMark({ subtitle = 'Ligue nationale' }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-      {/* F1-inspired chevron mark */}
       <div style={{
         width: '36px', height: '36px',
         background: 'var(--f1-red)',
@@ -66,14 +73,15 @@ function PublicNavbar() {
   const [open, setOpen] = useState(false)
 
   const linkStyle = ({ isActive }) => ({
-    display: 'flex', alignItems: 'center', gap: '0.3rem',
-    padding: '0.4rem 0.75rem', borderRadius: '6px',
-    fontSize: '0.85rem', fontWeight: '700', color: isActive ? 'var(--f1-red)' : 'rgba(255,255,255,0.8)',
-    backgroundColor: isActive ? 'rgba(232,0,45,0.12)' : 'transparent',
+    display: 'flex', alignItems: 'center',
+    padding: '0 0.6rem', height: '64px',
+    fontSize: '0.82rem', fontWeight: '700',
+    color: isActive ? 'var(--f1-red)' : 'rgba(255,255,255,0.8)',
     textDecoration: 'none',
-    borderBottom: isActive ? '2px solid var(--f1-red)' : '2px solid transparent',
+    borderBottom: isActive ? '3px solid var(--f1-red)' : '3px solid transparent',
     transition: 'all 0.2s',
     textTransform: 'uppercase', letterSpacing: '0.04em',
+    whiteSpace: 'nowrap',
   })
 
   return (
@@ -83,11 +91,14 @@ function PublicNavbar() {
           <LogoMark />
         </NavLink>
 
-        <ul style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', listStyle: 'none' }}
+        {/* Desktop links */}
+        <ul style={{ display: 'flex', alignItems: 'center', gap: '0', listStyle: 'none', flex: 1, paddingLeft: '1.5rem' }}
           className="pub-links-desktop">
-          <li><NavLink to="/" end style={linkStyle}>Accueil</NavLink></li>
-          <li><NavLink to="/standings" style={linkStyle}>Classement</NavLink></li>
-          <li><NavLink to="/matches" style={linkStyle}>Résultats</NavLink></li>
+          {PUBLIC_NAV.map(({ to, label, end }) => (
+            <li key={to}>
+              <NavLink to={to} end={end} style={linkStyle}>{label}</NavLink>
+            </li>
+          ))}
         </ul>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -96,13 +107,11 @@ function PublicNavbar() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
               padding: '0.45rem 1rem', background: 'var(--f1-red)',
-              color: '#fff', borderRadius: '6px', fontSize: '0.8rem',
+              color: '#fff', borderRadius: '6px', fontSize: '0.78rem',
               fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em',
               textDecoration: 'none',
               boxShadow: '0 2px 8px rgba(232,0,45,0.4)',
-              transition: 'background 0.2s',
             }}
-            className="pub-login-btn"
           >
             🔑 Admin
           </NavLink>
@@ -121,11 +130,13 @@ function PublicNavbar() {
       {open && (
         <div style={{
           background: '#1e1e28', padding: '0.75rem 1.5rem 1rem',
-          display: 'flex', flexDirection: 'column', gap: '0.25rem',
+          display: 'flex', flexDirection: 'column', gap: '0.15rem',
           borderTop: '1px solid rgba(255,255,255,0.08)',
         }} className="mobile-menu">
-          {[{ to: '/', label: 'Accueil', end: true }, { to: '/standings', label: 'Classement' }, { to: '/matches', label: 'Résultats' }].map(({ to, label, end }) => (
-            <NavLink key={to} to={to} end={end} style={linkStyle} onClick={() => setOpen(false)}>
+          {PUBLIC_NAV.map(({ to, label, end }) => (
+            <NavLink key={to} to={to} end={end}
+              style={{ padding: '0.6rem 0', fontSize: '0.9rem', fontWeight: '700', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', textTransform: 'uppercase', letterSpacing: '0.04em' }}
+              onClick={() => setOpen(false)}>
               {label}
             </NavLink>
           ))}
@@ -133,11 +144,11 @@ function PublicNavbar() {
       )}
 
       <style>{`
-        @media (min-width: 769px) {
+        @media (min-width: 900px) {
           .hamburger-btn { display: none !important; }
           .mobile-menu   { display: none !important; }
         }
-        @media (max-width: 768px) {
+        @media (max-width: 899px) {
           .pub-links-desktop { display: none !important; }
         }
       `}</style>
@@ -197,7 +208,6 @@ function AdminNavbar() {
               border: '1px solid rgba(232,0,45,0.35)', borderRadius: '6px',
               padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: '700',
               textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer',
-              transition: 'all 0.2s',
             }}
             className="logout-btn"
           >
@@ -252,7 +262,6 @@ function AdminNavbar() {
   )
 }
 
-/* ── Smart Navbar (chooses public vs admin) ───────────────────────────────── */
 export default function Navbar() {
   const { isAdmin } = useAuth()
   return isAdmin ? <AdminNavbar /> : <PublicNavbar />
