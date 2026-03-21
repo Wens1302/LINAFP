@@ -132,3 +132,48 @@ class StatsResponse(BaseModel):
     top_scorers: List[TopScorer]
     teams_goals: List[TeamGoals]
     standings: List[StandingResponse]
+
+
+# ── Article schemas ───────────────────────────────────────────────────────────
+
+class ArticleCreate(BaseModel):
+    titre: str
+    contenu: str
+    image_url: Optional[str] = None
+    categorie: str = "news"
+    auteur: str = "Rédaction LINAFP"
+    publie: bool = True
+
+
+class ArticleUpdate(BaseModel):
+    titre: Optional[str] = None
+    contenu: Optional[str] = None
+    image_url: Optional[str] = None
+    categorie: Optional[str] = None
+    auteur: Optional[str] = None
+    publie: Optional[bool] = None
+
+
+class ArticleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    titre: str
+    contenu: str
+    image_url: Optional[str] = None
+    categorie: str
+    date_publication: datetime
+    auteur: str
+    publie: bool
+
+
+# ── Auth schemas ──────────────────────────────────────────────────────────────
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

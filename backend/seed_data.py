@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from datetime import datetime
 from database import SessionLocal, engine
 import models
+from auth import hash_password
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -58,43 +59,135 @@ MATCHES = [
     (0, 2, "2024-09-21 15:00:00", 2, 0),
 ]
 
+ARTICLES = [
+    {
+        "titre": "CF Mounana remporte le derby gabonais face à Mangasport",
+        "contenu": (
+            "Dans un match électrique disputé au Stade de Mounana, CF Mounana s'est imposé 2-1 "
+            "face à Mangasport. Patrick Biyogo a inscrit un doublé pour offrir la victoire à son "
+            "équipe devant plus de 5 000 supporters. Ce succès conforte CF Mounana en tête du "
+            "classement avec 7 points après trois journées."
+        ),
+        "image_url": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80",
+        "categorie": "match",
+        "auteur": "Rédaction LINAFP",
+        "date_publication": datetime(2024, 9, 7, 18, 0),
+    },
+    {
+        "titre": "Aubin Moussavou, meilleur buteur de la saison",
+        "contenu": (
+            "À seulement 21 ans, l'attaquant de Mangasport Aubin Moussavou s'impose comme le "
+            "grand artisan offensif de la saison avec 10 buts en championnat. Convoité par "
+            "plusieurs clubs du continent, le joueur a déclaré vouloir finir la saison à Moanda "
+            "avant d'étudier d'éventuelles offres."
+        ),
+        "image_url": "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?w=800&q=80",
+        "categorie": "news",
+        "auteur": "Rédaction LINAFP",
+        "date_publication": datetime(2024, 9, 16, 10, 0),
+    },
+    {
+        "titre": "AS Pélican accueille Bouenguidi Sports à Omar Bongo",
+        "contenu": (
+            "La prochaine journée du championnat mettra aux prises AS Pélican et Bouenguidi "
+            "Sports au mythique Stade Omar Bongo de Libreville. Un match crucial pour les deux "
+            "équipes qui cherchent à remonter au classement. Coup d'envoi prévu à 16h00."
+        ),
+        "image_url": "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80",
+        "categorie": "match",
+        "auteur": "Rédaction LINAFP",
+        "date_publication": datetime(2024, 9, 18, 9, 30),
+    },
+    {
+        "titre": "La LINAFP annonce la réforme du championnat national",
+        "contenu": (
+            "La Ligue Nationale de Football Professionnel (LINAFP) a annoncé une réforme "
+            "majeure du championnat national à partir de la saison prochaine. Le nombre "
+            "d'équipes participantes passera de 16 à 18, avec l'intégration de deux clubs "
+            "des provinces. Une décision saluée par l'ensemble des acteurs du football gabonais."
+        ),
+        "image_url": "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=80",
+        "categorie": "news",
+        "auteur": "Direction LINAFP",
+        "date_publication": datetime(2024, 9, 20, 14, 0),
+    },
+    {
+        "titre": "Transfert : Guy-Roger Assoumou prolonge à Bouenguidi Sports",
+        "contenu": (
+            "Malgré les rumeurs de départ, l'attaquant Guy-Roger Assoumou a paraphé un nouveau "
+            "contrat de deux ans avec Bouenguidi Sports. Le joueur de 20 ans, auteur de 9 buts "
+            "cette saison, a confirmé son attachement au club de Franceville lors d'une "
+            "conférence de presse organisée ce vendredi."
+        ),
+        "image_url": "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&q=80",
+        "categorie": "transfert",
+        "auteur": "Rédaction LINAFP",
+        "date_publication": datetime(2024, 9, 22, 11, 0),
+    },
+]
+
+# Default admin credentials – override via env vars in production
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin1234")
+
 
 def seed():
     db = SessionLocal()
     try:
         if db.query(models.Team).count() > 0:
-            print("Database already seeded – skipping.")
-            return
+            print("Database already seeded – skipping teams/players/matches.")
+        else:
+            # Insert teams
+            db_teams = []
+            for t in TEAMS:
+                team = models.Team(**t)
+                db.add(team)
+                db_teams.append(team)
+            db.flush()  # get team IDs
 
-        # Insert teams
-        db_teams = []
-        for t in TEAMS:
-            team = models.Team(**t)
-            db.add(team)
-            db_teams.append(team)
-        db.flush()  # get team IDs
+            # Insert players
+            for p in PLAYERS:
+                idx = p.pop("team_idx")
+                player = models.Player(**p, team_id=db_teams[idx].id)
+                db.add(player)
+            db.flush()
 
-        # Insert players
-        for p in PLAYERS:
-            idx = p.pop("team_idx")
-            player = models.Player(**p, team_id=db_teams[idx].id)
-            db.add(player)
-        db.flush()
+            # Insert matches
+            for home_idx, away_idx, date_str, hs, as_ in MATCHES:
+                match = models.Match(
+                    home_team_id=db_teams[home_idx].id,
+                    away_team_id=db_teams[away_idx].id,
+                    date=datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S"),
+                    stade=db_teams[home_idx].stade,
+                    home_score=hs,
+                    away_score=as_,
+                )
+                db.add(match)
 
-        # Insert matches
-        for home_idx, away_idx, date_str, hs, as_ in MATCHES:
-            match = models.Match(
-                home_team_id=db_teams[home_idx].id,
-                away_team_id=db_teams[away_idx].id,
-                date=datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S"),
-                stade=db_teams[home_idx].stade,
-                home_score=hs,
-                away_score=as_,
+            db.commit()
+            print(f"Seeded: {len(TEAMS)} teams, {len(PLAYERS)} players, {len(MATCHES)} matches.")
+
+        # Seed admin user
+        if db.query(models.AdminUser).count() == 0:
+            admin = models.AdminUser(
+                username=ADMIN_USERNAME,
+                hashed_password=hash_password(ADMIN_PASSWORD),
             )
-            db.add(match)
+            db.add(admin)
+            db.commit()
+            print(f"Admin user created: {ADMIN_USERNAME} (change password in production!)")
+        else:
+            print("Admin user already exists – skipping.")
 
-        db.commit()
-        print(f"Seeded: {len(TEAMS)} teams, {len(PLAYERS)} players, {len(MATCHES)} matches.")
+        # Seed articles
+        if db.query(models.Article).count() == 0:
+            for a in ARTICLES:
+                db.add(models.Article(**a))
+            db.commit()
+            print(f"Seeded {len(ARTICLES)} articles.")
+        else:
+            print("Articles already seeded – skipping.")
+
     except Exception as exc:
         db.rollback()
         print(f"Seeding failed: {exc}", file=sys.stderr)

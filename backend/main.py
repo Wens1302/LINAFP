@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 import models  # noqa: F401 – registers all ORM models with Base
 from routers import teams, players, matches, standings, stats
+from routers import auth, articles
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -27,6 +28,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
+app.include_router(articles.router)
 app.include_router(teams.router)
 app.include_router(players.router)
 app.include_router(matches.router)

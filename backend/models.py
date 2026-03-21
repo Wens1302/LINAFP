@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -46,3 +46,24 @@ class Match(Base):
 
     home_team = relationship("Team", foreign_keys=[home_team_id], back_populates="home_matches")
     away_team = relationship("Team", foreign_keys=[away_team_id], back_populates="away_matches")
+
+
+class Article(Base):
+    __tablename__ = "articles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titre = Column(String, nullable=False)
+    contenu = Column(Text, nullable=False)
+    image_url = Column(String, nullable=True)
+    categorie = Column(String, nullable=False, default="news")  # news | match | transfert
+    date_publication = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    auteur = Column(String, nullable=False, default="Rédaction LINAFP")
+    publie = Column(Boolean, nullable=False, default=True)
+
+
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False, index=True)
+    hashed_password = Column(String, nullable=False)

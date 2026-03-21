@@ -1,9 +1,30 @@
 import axios from 'axios'
 
+const TOKEN_KEY = 'gfs_admin_token'
+
 const api = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
 })
+
+// Attach token to every request when present
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY)
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+export const adminLogin = (data) => api.post('/auth/login', data)
+
+// ── Articles ───────────────────────────────────────────────────────────────
+export const getArticles = (params = {}) => api.get('/articles', { params })
+export const getArticle = (id) => api.get(`/articles/${id}`)
+export const createArticle = (data) => api.post('/articles', data)
+export const updateArticle = (id, data) => api.put(`/articles/${id}`, data)
+export const deleteArticle = (id) => api.delete(`/articles/${id}`)
 
 // ── Teams ──────────────────────────────────────────────────────────────────
 export const getTeams = () => api.get('/teams/')
