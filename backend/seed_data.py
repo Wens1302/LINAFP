@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 seed_data.py – Populates the database with sample Gabonese football data.
 
@@ -165,8 +166,9 @@ def seed():
 
             # Insert players
             for p in PLAYERS:
-                idx = p.pop("team_idx")
-                player = models.Player(**p, team_id=db_teams[idx].id)
+                player_data = {**p}
+                player_data.pop("team_idx")
+                player = models.Player(**player_data, team_id=db_teams[p["team_idx"]].id)
                 db.add(player)
             db.flush()
 

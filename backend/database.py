@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 from dotenv import load_dotenv
@@ -25,6 +26,11 @@ except Exception:
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
+elif DATABASE_URL.startswith("postgresql"):
+    # Force UTF-8 client encoding so that accented characters in data (e.g.
+    # French player names like "Cédric" or "Stéphane") are transmitted and
+    # stored correctly regardless of the PostgreSQL server's default locale.
+    connect_args = {"client_encoding": "UTF8"}
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
