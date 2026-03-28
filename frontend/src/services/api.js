@@ -1,12 +1,15 @@
 import axios from 'axios';
 
+const TOKEN_KEY = 'gfs_admin_token';
+
 const api = axios.create({
   baseURL: '/api',
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT token if present
+// Attach token to every request when present
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -14,8 +17,7 @@ api.interceptors.request.use((config) => {
 });
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
-export const login = (username, password) =>
-  api.post('/auth/login', { username, password });
+export const adminLogin = (data) => api.post('/auth/login', data);
 
 // ── Competitions ──────────────────────────────────────────────────────────────
 export const getCompetitions = () => api.get('/competitions');
