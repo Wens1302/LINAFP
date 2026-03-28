@@ -1,63 +1,97 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { login } from '../services/api';
+import React, { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
+import { adminLogin } from '../services/api'
 
 export default function Login() {
-  const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from?.pathname || '/dashboard'
+
+  const [form, setForm] = useState({ username: '', password: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleChange = (e) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    setError('')
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      const res = await login(form.username, form.password);
-      localStorage.setItem('token', res.data.access_token);
-      localStorage.setItem('role', res.data.role);
-      navigate('/');
-    } catch {
-      setError('Identifiants invalides. Veuillez réessayer.');
-    } finally {
-      setLoading(false);
+    e.preventDefault()
+    if (!form.username || !form.password) {
+      setError('Veuillez remplir tous les champs.')
+      return
     }
-  };
+    setLoading(true)
+    try {
+      const res = await adminLogin(form)
+      login(res.data.access_token)
+      navigate(from, { replace: true })
+    } catch (err) {
+      setError(
+        err.response?.data?.detail || 'Identifiants incorrects. Veuillez réessayer.'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="page-container" style={{ maxWidth: 420, margin: '80px auto' }}>
-      <div className="card">
-        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>⚽ Connexion</h2>
-        {error && <div className="alert alert-error">{error}</div>}
-        <form onSubmit={handleSubmit} className="form">
+    <div className="login-page">
+      <div className="login-card">
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: '56px', height: '56px', borderRadius: '12px',
+            background: 'var(--f1-red)', marginBottom: '1rem',
+            boxShadow: '0 4px 16px rgba(232,0,45,0.4)',
+          }}>
+            <span style={{ fontSize: '1.75rem' }}>⚽</span>
+          </div>
+          <h1>Administration</h1>
+          <p>GabonFootStats · LINAFP</p>
+        </div>
+
+        {error && <div className="login-error">{error}</div>}
+
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label>Nom d&apos;utilisateur</label>
+            <label htmlFor="username">Identifiant</label>
             <input
+              id="username"
+              name="username"
               type="text"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              required
               placeholder="admin"
+              value={form.username}
+              onChange={handleChange}
+              autoComplete="username"
+              autoFocus
             />
           </div>
-          <div className="form-group">
-            <label>Mot de passe</label>
+          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+            <label htmlFor="password">Mot de passe</label>
             <input
+              id="password"
+              name="password"
               type="password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
               placeholder="••••••••"
+              value={form.password}
+              onChange={handleChange}
+              autoComplete="current-password"
             />
           </div>
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+          <button type="submit" className="login-btn" disabled={loading}>
             {loading ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>
-        <p style={{ marginTop: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
-          Comptes de démo : admin / admin1234 · editor / editor1234 · reader / reader1234
+
+        <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)' }}>
+          Accès réservé aux administrateurs LINAFP
         </p>
       </div>
     </div>
-  );
+  )
 }
