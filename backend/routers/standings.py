@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
 from collections import defaultdict
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from database import get_db
-from models import Match, Team
+from models import Match, Team, MatchStatus
 from schemas import StandingResponse
 
 router = APIRouter(prefix="/api/standings", tags=["standings"])
 
 
-def compute_standings(db: Session) -> List[StandingResponse]:
+def compute_standings(db: Session, season_id: Optional[int] = None) -> List[StandingResponse]:
     teams = db.query(Team).all()
-    matches = db.query(Match).all()
+    query = db.query(Match).filter(Match.status == MatchStatus.finished)
+    if season_id is not None:
+        query = query.filter(Match.season_id == season_id)
+    matches = query.all()
 
     stats: dict = defaultdict(lambda: {
         "points": 0, "played": 0, "won": 0,
@@ -65,10 +68,13 @@ def compute_standings(db: Session) -> List[StandingResponse]:
             goal_difference=s["goals_for"] - s["goals_against"],
         ))
 
-    results.sort(key=lambda x: (-x.points, -x.goal_difference))
+    results.sort(key=lambda x: (-x.points, -x.goal_difference, -x.goals_for))
     return results
 
 
 @router.get("", response_model=List[StandingResponse])
-def get_standings(db: Session = Depends(get_db)):
-    return compute_standings(db)
+def get_standings(
+    season_id: Optional[int] = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    return compute_standings(db, season_id=season_id)

@@ -6,14 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 import models  # noqa: F401 - registers all ORM models with Base
 from routers import teams, players, matches, standings, stats
-from routers import auth, articles
+from routers import auth, articles, competitions, seasons, match_events, squad_memberships
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="GabonFootStats API",
     description="Backend API for the GabonFootStats football statistics application",
-    version="1.0.0",
+    version="2.0.0",
 )
 
 _raw_origins = os.getenv("CORS_ORIGINS", "*")
@@ -31,9 +31,13 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(articles.router)
+app.include_router(competitions.router)
+app.include_router(seasons.router)
 app.include_router(teams.router)
 app.include_router(players.router)
+app.include_router(squad_memberships.router)
 app.include_router(matches.router)
+app.include_router(match_events.router)
 app.include_router(standings.router)
 app.include_router(stats.router)
 

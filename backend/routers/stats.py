@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from collections import defaultdict
+from typing import Optional
 
 from database import get_db
-from models import Match, Player, Team
+from models import Match, Player, Team, MatchStatus
 from schemas import StatsResponse, TopScorer, TeamGoals
 from routers.standings import compute_standings
 
@@ -12,7 +13,10 @@ router = APIRouter(prefix="/api/stats", tags=["stats"])
 
 
 @router.get("", response_model=StatsResponse)
-def get_stats(db: Session = Depends(get_db)):
+def get_stats(
+    season_id: Optional[int] = Query(default=None),
+    db: Session = Depends(get_db),
+):
     # Top scorers – ranked by goals field on Player
     players = (
         db.query(Player)
@@ -33,9 +37,13 @@ def get_stats(db: Session = Depends(get_db)):
         for p in players
     ]
 
-    # Goals per team derived from match results
+    # Goals per team derived from finished match results
+    match_query = db.query(Match).filter(Match.status == MatchStatus.finished)
+    if season_id is not None:
+        match_query = match_query.filter(Match.season_id == season_id)
+
     team_goals_map: dict = defaultdict(lambda: {"goals_for": 0, "goals_against": 0})
-    for match in db.query(Match).all():
+    for match in match_query.all():
         team_goals_map[match.home_team_id]["goals_for"] += match.home_score
         team_goals_map[match.home_team_id]["goals_against"] += match.away_score
         team_goals_map[match.away_team_id]["goals_for"] += match.away_score
@@ -51,7 +59,7 @@ def get_stats(db: Session = Depends(get_db)):
         for team_id, data in sorted(team_goals_map.items(), key=lambda x: -x[1]["goals_for"])
     ]
 
-    standings = compute_standings(db)
+    standings = compute_standings(db, season_id=season_id)
 
     return StatsResponse(
         top_scorers=top_scorers,
