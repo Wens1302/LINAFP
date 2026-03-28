@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 auth.py – JWT creation/verification + password hashing helpers.
 """
