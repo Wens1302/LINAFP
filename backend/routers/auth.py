@@ -18,5 +18,5 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Identifiants incorrects",
         )
-    token = create_access_token({"sub": user.username})
-    return TokenResponse(access_token=token)
+    token = create_access_token({"sub": user.username, "role": user.role.value})
+    return TokenResponse(access_token=token, role=user.role)

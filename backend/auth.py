@@ -44,8 +44,35 @@ def decode_token(token: str) -> dict:
         ) from exc
 
 
-def get_current_admin(
+def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ) -> dict:
     """FastAPI dependency – validates the Bearer token and returns its payload."""
     return decode_token(credentials.credentials)
+
+
+# Keep the old name as an alias for backward compatibility
+get_current_admin = get_current_user
+
+
+def require_role(*roles: str):
+    """Return a dependency that asserts the current user has one of the given roles."""
+    def _checker(payload: dict = Depends(get_current_user)) -> dict:
+        user_role = payload.get("role", "admin")
+        if user_role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission insuffisante",
+            )
+        return payload
+    return _checker
+
+
+def require_admin():
+    """Shortcut – admin role only."""
+    return require_role("admin")
+
+
+def require_editor_or_admin():
+    """Shortcut – admin or editor roles."""
+    return require_role("admin", "editor")
