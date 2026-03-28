@@ -1,30 +1,69 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-
-from .database import Base
+from database import Base
 
 
-class User(Base):
-    __tablename__ = "users"
+class Team(Base):
+    __tablename__ = "teams"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
+    nom = Column(String, nullable=False)
+    ville = Column(String, nullable=False)
+    stade = Column(String, nullable=False)
+    logo = Column(String, nullable=True)
+
+    players = relationship("Player", back_populates="team", cascade="all, delete-orphan")
+    home_matches = relationship("Match", foreign_keys="Match.home_team_id", back_populates="home_team")
+    away_matches = relationship("Match", foreign_keys="Match.away_team_id", back_populates="away_team")
+
+
+class Player(Base):
+    __tablename__ = "players"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nom = Column(String, nullable=False)
+    age = Column(Integer, nullable=False)
+    nationalite = Column(String, nullable=False)
+    poste = Column(String, nullable=False)
+    numero = Column(Integer, nullable=False)
+    goals = Column(Integer, default=0, nullable=False)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+
+    team = relationship("Team", back_populates="players")
+
+
+class Match(Base):
+    __tablename__ = "matches"
+
+    id = Column(Integer, primary_key=True, index=True)
+    home_team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+    away_team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+    date = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    stade = Column(String, nullable=False)
+    home_score = Column(Integer, default=0, nullable=False)
+    away_score = Column(Integer, default=0, nullable=False)
+
+    home_team = relationship("Team", foreign_keys=[home_team_id], back_populates="home_matches")
+    away_team = relationship("Team", foreign_keys=[away_team_id], back_populates="away_matches")
+
+
+class Article(Base):
+    __tablename__ = "articles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titre = Column(String, nullable=False)
+    contenu = Column(Text, nullable=False)
+    image_url = Column(String, nullable=True)
+    categorie = Column(String, nullable=False, default="news")  # news | match | transfert
+    date_publication = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    auteur = Column(String, nullable=False, default="Rédaction LINAFP")
+    publie = Column(Boolean, nullable=False, default=True)
+
+
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False, index=True)
     hashed_password = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    transactions = relationship("Transaction", back_populates="owner")
-
-
-class Transaction(Base):
-    __tablename__ = "transactions"
-
-    id = Column(Integer, primary_key=True, index=True)
-    description = Column(String, nullable=False)
-    amount = Column(Float, nullable=False)
-    category = Column(String, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-
-    owner = relationship("User", back_populates="transactions")
