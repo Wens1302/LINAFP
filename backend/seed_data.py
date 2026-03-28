@@ -167,8 +167,8 @@ def seed():
             # Insert players
             for p in PLAYERS:
                 player_data = {**p}
-                player_data.pop("team_idx")
-                player = models.Player(**player_data, team_id=db_teams[p["team_idx"]].id)
+                team_idx = player_data.pop("team_idx")
+                player = models.Player(**player_data, team_id=db_teams[team_idx].id)
                 db.add(player)
             db.flush()
 
